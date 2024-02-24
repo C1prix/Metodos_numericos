@@ -1,0 +1,149 @@
+import math
+from tabulate import tabulate
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import fsolve
+
+def g(x):
+    return 7 * math.exp(-x/7) * math.sin(2*x) - 1
+
+def bisection_method(func, x0, x1, max_iter=100, tol=1e-8):
+    if func(x0) * func(x1) >= 0:
+        raise ValueError("La función no tiene raíces en el intervalo dado.")
+    
+    for i in range(max_iter):
+        x_mid = (x0 + x1) / 2
+        f_mid = func(x_mid)
+        
+        if abs(f_mid) < tol:
+            return x_mid
+        
+        if func(x0) * f_mid < 0:
+            x1 = x_mid
+        else:
+            x0 = x_mid
+            
+    raise ValueError("El método de bisección no convergió.")
+
+def secant_method(func, x0, x1, max_iter=100, tol=1e-8):
+    for i in range(max_iter):
+        f0 = func(x0)
+        f1 = func(x1)
+        
+        if abs(f1) < tol:
+            return x1
+        
+        x_next = x1 - f1 * (x1 - x0) / (f1 - f0)
+        x0, x1 = x1, x_next
+    
+    raise ValueError("El método de la secante no convergió.")
+
+# Parte 1
+print("Punto (a): x0 = 0, x1 = 1")
+try:
+    root_bisection_a = bisection_method(g, 0, 1)
+    print(f"Raíz usando el método de Bisección: {root_bisection_a:.6f}")
+except ValueError as e:
+    print(e)
+
+try:
+    root_secant_a = secant_method(g, 0, 1)
+    print(f"Raíz usando el método de la Secante: {root_secant_a:.6f}")
+except ValueError as e:
+    print(e)
+
+print("Punto (b): x0 = 2, x1 = 4")
+try:
+    root_bisection_b = bisection_method(g, 2, 4)
+    print(f"Raíz usando el método de Bisección: {root_bisection_b:.6f}")
+except ValueError as e:
+    print(e)
+
+try:
+    root_secant_b = secant_method(g, 2, 4)
+    print(f"Raíz usando el método de la Secante: {root_secant_b:.6f}")
+except ValueError as e:
+    print(e)
+
+print("Punto (c): x0 = 6, x1 = 8")
+try:
+    root_bisection_c = bisection_method(g, 6, 8)
+    print(f"Raíz usando el método de Bisección: {root_bisection_c:.6f}")
+except ValueError as e:
+    print(e)
+
+try:
+    root_secant_c = secant_method(g, 6, 8)
+    print(f"Raíz usando el método de la Secante: {root_secant_c:.6f}")
+except ValueError as e:
+    print(e)
+
+# Tabla de resultados
+table = [["Punto (a)", root_bisection_a if 'root_bisection_a' in locals() else "No convergió", root_secant_a if 'root_secant_a' in locals() else "No convergió"],
+         ["Punto (b)", root_bisection_b if 'root_bisection_b' in locals() else "No convergió", root_secant_b if 'root_secant_b' in locals() else "No convergió"],
+         ["Punto (c)", root_bisection_c if 'root_bisection_c' in locals() else "No convergió", root_secant_c if 'root_secant_c' in locals() else "No convergió"]]
+
+print(tabulate(table, headers=["Punto", "Bisección", "Secante"], tablefmt="grid"))
+
+print("El mejor método fue el de la secante por que fue el único que convergió correctamente")
+
+# Parte 2
+def f(x):
+    return 4 - 23*x + 21*x**2 - 3*x**3
+
+x_vals = np.linspace(-20, 20, 1000)
+y_vals = f(x_vals)
+
+plt.figure()
+plt.plot(x_vals, y_vals, label='f(x)')
+plt.axhline(0, color='gray', linewidth=0.5, linestyle='--')
+plt.axvline(0, color='gray', linewidth=0.5, linestyle='--')
+plt.xlabel('x')
+plt.ylabel('f(x)')
+plt.grid(True)
+plt.legend()
+plt.title('Gráfica de f(x)')
+plt.show()
+
+roots_bisection = [bisection_method(f, -20, 0), bisection_method(f, 0, 2), bisection_method(f, 2, 20)]
+
+print("Aproximación a la primera raíz por el método de la bisección:", roots_bisection[0])
+print("Aproximación a la segunda raíz por el método de la bisección:", roots_bisection[1])
+print("Aproximación a la tercera raíz por el método de la bisección:", roots_bisection[2])
+
+# Parte 3
+def NewtonMod(f, x0, TOL):
+    max_iter = 100
+    for i in range(max_iter):
+        f_prime = f.diff()
+        x_next = x0 - f(x0) / f_prime.subs('x', x0)
+        if abs(x_next - x0) < TOL:
+            return x_next
+        x0 = x_next
+    raise ValueError("El método de Newton no converge.")
+
+g = 7*math.exp(-x/7)*math.sin(2*x) - 1
+h = 3*math.cos(2*x) - 2*math.sin(3*x) + x**2 + math.exp(-x)
+
+root_g_Newton = NewtonMod(g, 12, 1e-11)
+root_h_Newton = NewtonMod(h, 0, 1e-13)
+
+print("Raíz de g(x) utilizando Newton:", root_g_Newton)
+print("Raíz de h(x) utilizando Newton:", root_h_Newton)
+
+# Parte 4
+def vehicle_interest_rate(i, A, P, n):
+    return A - P * i * (i + 1) ** n / ((i + 1) ** n - 1)
+
+def bisection_vehicle_interest_rate(tol=5e-6):
+    return bisection_method(lambda i: vehicle_interest_rate(i, 60000, 205000, 5), 0.1, 0.3, tol=tol)
+
+def secant_vehicle_interest_rate(tol=5e-6):
+    return secant_method(lambda i: vehicle_interest_rate(i, 60000, 205000, 5), 0.1, 0.3, tol=tol)
+
+def newton_vehicle_interest_rate(tol=5e-6):
+    return NewtonMod(lambda i: vehicle_interest_rate(i, 60000, 205000, 5), 0.1, tol)
+
+print("Tasa de interés anual utilizando Bisección:", bisection_vehicle_interest_rate())
+print("Tasa de interés anual utilizando Secante:", secant_vehicle_interest_rate())
+print("Tasa de interés anual utilizando Newton:", newton_vehicle_interest_rate())
